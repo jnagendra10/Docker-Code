@@ -3,6 +3,11 @@ on:
   push:
     branches:
       - master
+
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -50,9 +55,9 @@ jobs:
           name: dist-files
           path: dist
   deploy:
-    permissions:
-      contents: read
-      id-token: write
+    # permissions:
+    #   contents: read
+    #   id-token: write
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -65,11 +70,14 @@ jobs:
           path: ./dist
       - name: Output contents
         run: ls
-      - name: Get AWS Permissions
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::594366804961:role/githubdemo
+          role-to-assume: arn:aws:iam::594366804961:role/githubdemo1
           aws-region: us-east-1
+          audience: sts.amazonaws.com
+      - name: Test AWS Credentials
+        run: aws sts get-caller-identity
       - name: Deploy site
         id: deploy
         uses: ./.github/actions/deploy-s3-docker
